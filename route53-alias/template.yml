@@ -1,0 +1,82 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+##########################################################################
+#  Parameters                                                            #
+##########################################################################
+Parameters:
+  Route53DomainName:
+    Type: String
+
+
+Resources:
+##########################################################################
+#  Health Check                                                          #
+##########################################################################
+  HealthCheck:
+    Type: AWS::Route53::HealthCheck
+    Properties:
+      HealthCheckConfig:
+        EnableSNI: true
+        FullyQualifiedDomainName: !Sub ${RestApiGateway}.execute-api.${AWS::Region}.amazonaws.com
+        Type: HTTPS
+        FailureThreshold: 5 ## Default is 3
+        MeasureLatency: true ## Cannot be changed after creation
+        ResourcePath: /Prod
+##########################################################################
+#  Hosted Zone                                                              #
+##########################################################################
+  HostedZone:
+    Type: AWS::Route53::HostedZone
+    Properties:
+      HostedZoneConfig:
+        Comment: 'My hosted zone for nsncareer.com'
+      Name: 'www.nsncareer.com'
+      QueryLoggingConfig:
+        CloudWatchLogsLogGroupArn: 'nsncareer_logs'
+      VPCs:
+        - VPC: 'vpc-063f8b21a548c037c'
+
+##########################################################################
+#  Route53                                                               #
+##########################################################################
+  DNSARecordGroup:    
+    Type: AWS::Route53::RecordSetGroup
+    Properties:
+      HostedZoneId: !Ref HostedZone
+      Comment: 'Zone apex alias targeted to myELB LoadBalancer'
+      RecordSets: 
+        - Name: 'nsncareer.com'
+          Type: A
+          AliasTarget:
+            HostedZoneId: !GetAtt 'myELB.CanonicalHostedZoneID'
+            DNSName: !GetAtt 'myELB.DNSName'
+##########################################################################
+#  Route53                                                               #
+##########################################################################
+  myELB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Subnets:
+      - Ref: SubnetAZ1
+      - Ref: SubnetAZ2
+##########################################################################
+#  Route53                                                               #
+##########################################################################
+  SubnetAZ1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      VpcId: 'vpc-063f8b21a548c037c'
+      CidrBlock: 10.0.0.0/25
+      Tags:
+        - Key: Name
+          Value: SubnetAZ1
+  SubnetAZ2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Select [ 1, !GetAZs '' ]
+      VpcId: 'vpc-063f8b21a548c037c'
+      CidrBlock: 10.0.0.128/25
+      Tags:
+        - Key: Name
+          Value: SubnetAZ2
