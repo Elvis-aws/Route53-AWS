@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+
+
+Resources:
+##########################################################################
+#  Route53 Hosted Zone                                                   #
+##########################################################################
+  HostedZone:
+    Type: AWS::Route53::HostedZone
+    Properties:
+      HostedZoneConfig:
+        Comment: 'My hosted zone for simple routing policy'
+      Name: nsncareer.com
+
+##########################################################################
+#  Route53                                                               #
+##########################################################################
+  DNSARecordGroup:
+    Type: AWS::Route53::RecordSetGroup
+    Properties:
+      HostedZoneId: !Ref HostedZone
+      RecordSets:
+       -  Name: myapp.nsncareer.com
+          SetIdentifier: GB_Route
+          ResourceRecords:
+            - "10.25.255.255"
+          GeoLocation:
+            CountryCode: GB
+          Type: A
+          TTL: 30
+       - Name: myapp.nsncareer.com
+         SetIdentifier: US_Route
+         ResourceRecords:
+           - "10.26.255.255"
+         GeoLocation:
+           CountryCode: US
+         Type: A
+         TTL: 30
+       - Name: myapp.nsncareer.com
+         SetIdentifier: FR_Route
+         ResourceRecords:
+           - "10.27.255.255"
+         GeoLocation:
+           CountryCode: FR
+         Type: A
+         TTL: 30

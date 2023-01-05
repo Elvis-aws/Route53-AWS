@@ -4,16 +4,22 @@ AWSTemplateFormatVersion: 2010-09-09
 #  Parameters                                                            #
 ##########################################################################
 Parameters:
-  Route53DomainName:
+  ARecordOne:
     Type: String
-  ApiIrelandHostedZoneId:
-    Type: String
-  ApiIrelandDomainName:
-    Type: String
-  ApiIrelandEndpoint:
+  ARecordTwo:
     Type: String
 
 Resources:
+##########################################################################
+#  Route53 Load balancer                                                 #
+##########################################################################
+  myELB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Type: application
+      Subnets:
+        - subnet-002fb04124cdabd8d
+        - subnet-05fbe185988170f50
 ##########################################################################
 #  Health Check                                                          #
 ##########################################################################
@@ -22,11 +28,11 @@ Resources:
     Properties:
       HealthCheckConfig:
         EnableSNI: true
-        FullyQualifiedDomainName: !Sub ${RestApiGateway}.execute-api.${AWS::Region}.amazonaws.com
+        FullyQualifiedDomainName: www.nsncareer.com
         Type: HTTPS
         FailureThreshold: 5 ## Default is 3
         MeasureLatency: true ## Cannot be changed after creation
-        ResourcePath: /Prod
+        ResourcePath: /
 ##########################################################################
 #  Hosted Zone                                                              #
 ##########################################################################
@@ -34,32 +40,30 @@ Resources:
     Type: AWS::Route53::HostedZone
     Properties:
       HostedZoneConfig:
-        Comment: 'My hosted zone for nsncareer.com'
-      Name: 'www.nsncareer.com'
-      QueryLoggingConfig:
-        CloudWatchLogsLogGroupArn: 'nsncareer_logs'
-      VPCs:
-        - VPC: 'vpc-063f8b21a548c037c'
+        Comment: 'My hosted zone for weighted routing policy'
+      Name: nsncareer.com
+
 
 ##########################################################################
 #  Route53                                                               #
 ##########################################################################
   DNSARecordGroup:    
     Type: AWS::Route53::RecordSetGroup
+    DependsOn: myELB
     Properties:
       HostedZoneId: !Ref HostedZone
       RecordSets: 
-        - Name: 'xxxx.nsncareer.com'
-          Type: CNAME
+        - Name: myELB.nsncareer.com
+          Type: A
           TTL: '900'
           SetIdentifier: Frontend One 'Germany'
-          Weight: '140'
+          Weight: '90'
           ResourceRecords:
-            - example-ec2.amazonaws.com
-        - Name: 'xxxx.nsncareer.com'
-          Type: CNAME
+            - !Ref ARecordOne
+        - Name: myELB.nsncareer.com
+          Type: A
           TTL: '900'
           SetIdentifier: Frontend Two
-          Weight: '60'
+          Weight: '10'
           ResourceRecords:
-            - example-ec2-larger.amazonaws.com
+            - !Ref ARecordTwo

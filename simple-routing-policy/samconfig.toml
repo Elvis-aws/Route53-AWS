@@ -1,0 +1,13 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "route53-app"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-1kjqzy0abzdhz"
+s3_prefix = "route53-app"
+region = "eu-west-2"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+disable_rollback = true
+image_repositories = []
+parameter_overrides = "ARecord=\"101.10.21.3\""

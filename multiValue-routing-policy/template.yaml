@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Simple routing by making request to a single resource with no health check
+
+Parameters:
+  ARecord:
+    Type: String
+
+Resources:
+##########################################################################
+#  Route53 Load balancer                                                 #
+##########################################################################
+  myELB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Type: application
+      Subnets:
+        - subnet-002fb04124cdabd8d
+        - subnet-05fbe185988170f50
+
+##########################################################################
+#  Route53 Hosted Zone                                                   #
+##########################################################################
+  HostedZone:
+    Type: AWS::Route53::HostedZone
+    Properties:
+      HostedZoneConfig:
+        Comment: 'My hosted zone for simple routing policy'
+      Name: nsncareer.com
+
+##########################################################################
+#  Route53 Record Set                                                    #
+##########################################################################
+
+  DNSARecordGroup:
+    Type: AWS::Route53::RecordSetGroup
+    DependsOn: myELB
+    Properties:
+      HostedZoneId: !Ref HostedZone
+      RecordSets:
+        - Name: myELB.nsncareer.com
+          Type: A
+          SetIdentifier: myELB-euwest2
+          AliasTarget:
+            HostedZoneId: !GetAtt myELB.CanonicalHostedZoneID
+            DNSName: !GetAtt myELB.DNSName
+            EvaluateTargetHealth: true

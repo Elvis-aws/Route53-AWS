@@ -1,0 +1,62 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+
+Resources:
+##########################################################################
+#  Route53 Load balancer                                                 #
+##########################################################################
+  myELB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Type: application
+      Subnets:
+        - subnet-002fb04124cdabd8d
+        - subnet-05fbe185988170f50
+##########################################################################
+#  Route53 Hosted Zone                                                   #
+##########################################################################
+  HostedZone:
+    Type: AWS::Route53::HostedZone
+    Properties:
+      HostedZoneConfig:
+        Comment: 'My hosted zone for simple routing policy'
+      Name: nsncareer.com
+##########################################################################
+#  Route53 Health Check                                                  #
+##########################################################################
+  myHealthCheck:
+    Type: 'AWS::Route53::HealthCheck'
+    Properties:
+      HealthCheckConfig:
+        Port: 80
+        Type: HTTP
+        ResourcePath: '/nsncareer/index.html'
+        FullyQualifiedDomainName: nsncareer.com
+        RequestInterval: 30
+        FailureThreshold: 3
+##########################################################################
+#  Route53                                                               #
+##########################################################################
+  FailOverGroup:    
+    Type: AWS::Route53::RecordSetGroup
+    Properties:
+      HostedZoneId: !Ref HostedZone
+      RecordSets: 
+        - Name: myapp.nsncareer.com
+          Type: A
+          Failover: PRIMARY
+          SetIdentifier: Primary
+          HealthCheckId: !Ref myHealthCheck
+          AliasTarget:
+            HostedZoneId: !GetAtt myELB.CanonicalHostedZoneID
+            DNSName: !GetAtt myELB.DNSName
+            EvaluateTargetHealth: true
+        - Name: myapp.nsncareer.com
+          Type: A
+          Failover: SECONDARY
+          SetIdentifier: Secondary
+          HealthCheckId: !Ref myHealthCheck
+          AliasTarget:
+            HostedZoneId: !GetAtt myELB.CanonicalHostedZoneID
+            DNSName: !GetAtt myELB.DNSName
+            EvaluateTargetHealth: true
