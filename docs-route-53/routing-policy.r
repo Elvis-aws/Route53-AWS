@@ -8,12 +8,12 @@
         Simple Routing Policy
         *********************
             - Can have multiple IP addresses to route to.
-            - Simple routing does not allow the creation of 
-            multiple records with the same name and type, but multiple values can be 
+            - Simple routing does not allow the creation of multiple records with the same name and type,
+              but multiple values can be
             - Simple routing policy does not support health checks, so the record would be returned to the 
-            client even if it is unhealthy.
+              client even if it is unhealthy.
             - With Alias record enabled, only one AWS resource or one record can be specified in the current 
-            hosted zone.
+              hosted zone.
         ***********************
         Weighted Routing Policy
         ***********************
@@ -59,7 +59,7 @@
             - Helps when shifting traffic from one region to another
             - Routes traffic to the resources based on the geographic location of the users and the resources.
             - Can be configured with a bias to optionally choose to route more traffic or less to a given 
-            resource.
+              resource.
         *************************
         Multivalue Routing Policy
         *************************
@@ -67,4 +67,4 @@
             - Returns multiple values, e.g. IP addresses for the web servers, in response to DNS queries.
             - Check the health of each resource, so only the values for healthy resources are returned.
             - To route traffic approximately randomly to multiple resources, such as web servers, one multivalue 
-            answer record can be created for each resource.
+              answer record can be created for each resource.
